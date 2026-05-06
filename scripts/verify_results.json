@@ -1,0 +1,79 @@
+{
+  "gpt-4o-mini": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "gpt-4o": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "claude-haiku": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "claude-sonnet": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "gemini-flash": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "llama3-8b": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "llama3-70b": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "mistral-7b": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "qwen": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "deepseek": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "gpt-5.5": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "claude-opus-4-7": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "qwen-3.6-flash": {
+    "status": "PASS",
+    "response": "OK",
+    "error": null
+  },
+  "deepseek-v4-flash": {
+    "status": "FAIL",
+    "response": null,
+    "error": "Error code: 429 - {'code': 429, 'reason': 'RATE_LIMIT_EXCEEDED', 'message': 'You have exceeded the request rate limit. Please wait a short period before retrying your request or contact the support to increase your request rate limit.', 'metadata': {'detail': 'current limit 30 requests per minute'}}"
+  },
+  "summary": {
+    "timestamp": "2026-05-01T01:29:49.592642",
+    "passed": 13,
+    "failed": 1,
+    "skipped": 0,
+    "total": 14
+  }
+}

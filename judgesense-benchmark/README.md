@@ -1,0 +1,152 @@
+# JudgeSense: A Benchmark for Prompt Sensitivity in LLM-as-a-Judge Systems
+
+[![License: CC-BY-4.0](https://img.shields.io/badge/License-CC--BY--4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![arXiv](https://img.shields.io/badge/arXiv-[REDACTED]-red.svg)]()
+[![HuggingFace](https://img.shields.io/badge/dataset-HuggingFace-orange.svg)](https://huggingface.co/datasets/anonymousreview111/judgesense-benchmark)
+
+---
+
+## Overview
+
+**JudgeSense** is a benchmark dataset of **500 hand-validated prompt pairs** for measuring prompt sensitivity in LLM-as-a-Judge evaluation systems. Each pair contains two differently phrased but semantically equivalent judge prompts applied to the same response, enabling rigorous measurement of how much a judge's decision changes due to prompt wording alone.
+
+All 500 pairs were independently validated by two human annotators with full agreement: 500 confirmed semantically equivalent; 50 pairs involving Template 4 (polarity-inverted) were labeled non-equivalent by both annotators and excluded before publication.
+
+The dataset covers four evaluation task types:
+
+| Task | Source | Pairs | Labels |
+|------|--------|-------|--------|
+| **Factuality** | TruthfulQA | 125 | accurate / inaccurate |
+| **Coherence** | SummEval | 125 | score_1 ... score_5 |
+| **Preference** | MT-Bench | 125 | A / B |
+| **Relevance** | BEIR | 125 | A / B |
+
+---
+
+## What This Enables
+
+- **Prompt sensitivity evaluation** - measure how fragile a judge is to phrasing variation
+- **LLM judge robustness benchmarking** - compare models on decision consistency
+- **Detection of prompt-induced artifacts** - identify polarity inversions (T4) and other systematic biases
+
+---
+
+## Quick Start
+
+```python
+from utils.load_judgesense import load_task, load_all
+from utils.compute_jss import compute_jss
+
+# Load one task
+pairs = load_task("factuality")
+print(f"{len(pairs)} pairs loaded")
+
+# Load all tasks
+all_data = load_all()
+
+# Compute JSS from your judge's decisions
+jss = compute_jss(decisions_a, decisions_b)
+print(f"JSS: {jss:.3f}")
+```
+
+Run the full example:
+
+```bash
+cd judgesense-benchmark
+python examples/run_jss_example.py
+```
+
+---
+
+## Dataset Schema
+
+Each JSONL record has eight fields:
+
+```json
+{
+  "pair_id": "fact_001",
+  "task_type": "factuality",
+  "source_benchmark": "TruthfulQA",
+  "prompt_a": "Is this factually correct? Answer YES or NO only.\n\nResponse: ...",
+  "prompt_b": "Fact-check this response. Reply YES (correct) or NO (incorrect).\n\nResponse: ...",
+  "response_being_judged": "The Earth orbits around the Sun.",
+  "ground_truth_label": "accurate",
+  "semantic_equivalence_score": 1.0
+}
+```
+
+---
+
+## Metric: Judge Sensitivity Score (JSS)
+
+JSS is the fraction of pairs where both prompt variants elicit the same decision from the judge:
+
+```
+JSS = (1/N) * sum( decisions_a[i] == decisions_b[i] )
+```
+
+- **JSS = 1.0** - perfectly consistent; the judge never changes its decision due to prompt phrasing
+- **JSS = 0.0** - maximally sensitive; every decision flips between prompts
+
+A high flip rate (= 1 - JSS) indicates the judge's apparent decisions are largely driven by prompt design rather than the content being evaluated.
+
+---
+
+## Benchmark Results (13 judges, pass-3)
+
+### Coherence (most discriminating task)
+
+| Model | JSS | Cohen's kappa |
+|---|---|---|
+| Claude Sonnet 4.5 | 0.99 | 0.986 |
+| Qwen-2.5-72B | 0.92 | 0.842 |
+| GPT-4o | 0.91 | 0.828 |
+| GPT-5.5 | 0.83 | 0.694 |
+| GPT-4o-mini | 0.78 | 0.627 |
+| Claude Haiku 4.5 | 0.73 | 0.583 |
+| Claude Opus 4.7 | 0.70 | 0.580 |
+| LLaMA-3.1-70B | 0.55 | 0.338 |
+| DeepSeek-R1 | 0.53 | 0.332 |
+| Qwen 3.6 Flash | 0.51 | 0.372 |
+| DeepSeek-V4 Flash | 0.50 | 0.349 |
+| Mistral-7B | 0.48 | -0.082 |
+| Gemini 2.5 Flash | 0.39 | -0.057 |
+
+### Factuality (after T4 polarity correction)
+
+| Model | JSS (raw) | JSS (corrected) | Delta |
+|---|---|---|---|
+| GPT-4o | 0.63 | 0.98 | +0.35 |
+| GPT-4o-mini | 0.63 | 0.96 | +0.33 |
+| Claude Haiku 4.5 | 0.63 | 0.97 | +0.34 |
+| Claude Sonnet 4.5 | 0.63 | 0.97 | +0.34 |
+| DeepSeek-R1 | 0.63 | 0.96 | +0.33 |
+| LLaMA-3.1-70B | 0.63 | 0.99 | +0.36 |
+| Gemini 2.5 Flash | 0.63 | 0.98 | +0.35 |
+| Qwen-2.5-72B | 0.63 | 0.98 | +0.35 |
+| Mistral-7B | 0.71 | 0.89 | +0.18 |
+| GPT-5.5 | 0.63 | 0.98 | +0.35 |
+| Claude Opus 4.7 | 0.63 | 0.99 | +0.36 |
+| Qwen 3.6 Flash | 0.63 | 0.97 | +0.34 |
+| DeepSeek-V4 Flash | 0.62 | 0.95 | +0.33 |
+
+---
+
+## Key Insights
+
+> **Coherence JSS varies by more than 0.6 units across 13 judges and does not track model scale or recency.**
+
+- Claude Opus 4.7 (0.70) scores lower than Claude Haiku 4.5 (0.73); GPT-5.5 (0.83) scores lower than GPT-4o (0.91)
+- Factuality JSS ranges from 0.89 to 0.99 after T4 correction; residual variation reflects genuine model-level differences
+- Preference and relevance JSS are degenerate (12 of 13 judges always select option A)
+
+---
+
+## License
+
+- **Dataset**: [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)
+- **Code**: MIT License
+
+---
+
+*Anonymous submission for double-blind review. All evaluations conducted on public benchmarks and APIs.*
